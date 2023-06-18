@@ -37,7 +37,7 @@ export type Dead = {
 export type EnnemyState = Patrolling | Chasing | Fighting | RunningTo | Dead;
 
 
-export type Ennemy<T extends EnnemyState | { kind: unknown } = { kind: unknown }> = {
+export type Ennemy<T extends EnnemyState> = {
   id: number,
   initialPosition: Point,
   position: Point,
@@ -45,7 +45,7 @@ export type Ennemy<T extends EnnemyState | { kind: unknown } = { kind: unknown }
   state: T
 }
 
-export const createEnnemy: (id: number, p: Point, a: Shape) => Ennemy =
+export const createEnnemy: (id: number, p: Point, a: Shape) => Ennemy<EnnemyState> =
   (id, p, a) => ({ id: id, initialPosition: p, position: p, health: 10, state: { kind: "PATROLLING", area: a } });
 
 export type Input =
