@@ -1,9 +1,9 @@
-import { Ennemy, Player, Input, Shape, DomainError } from "./types";
+import { Ennemy, Player, Input, Shape, DomainError, Fighting, Chasing, Dead, RunningTo, EnnemyState, Patrolling } from "./types";
 import * as E from "fp-ts/lib/Either";
 import { Either } from "fp-ts/lib/Either";
 
 
-export const whenReachPlayer: (e: Ennemy, p: Player) => Either<DomainError, Ennemy> = (e, p) => {
+export const whenReachPlayer: (e: Ennemy<EnnemyState>, p: Player) => Either<DomainError, Ennemy<Fighting>> = (e, p) => {
   switch (e.state.kind) {
     case "CHASING":
       return E.right({ ...e, state: { kind: "FIGHTING", player: p } });
@@ -12,7 +12,7 @@ export const whenReachPlayer: (e: Ennemy, p: Player) => Either<DomainError, Enne
   }
 }
 
-export const whenDetect: (e: Ennemy, p: Player) => Either<DomainError, Ennemy> = (e, p) => {
+export const whenDetect: (e: Ennemy<EnnemyState>, p: Player) => Either<DomainError, Ennemy<Chasing>> = (e, p) => {
   switch (e.state.kind) {
     case "PATROLLING":
       return E.right({ ...e, state: { kind: "CHASING", target: p } });
@@ -21,7 +21,7 @@ export const whenDetect: (e: Ennemy, p: Player) => Either<DomainError, Ennemy> =
   }
 }
 
-export const whenAttack: (e: Ennemy, p: Player) => Either<DomainError, Ennemy> = (e, p) => {
+export const whenAttack: (e: Ennemy<EnnemyState>, p: Player) => Either<DomainError, Ennemy<Fighting>> = (e, p) => {
   switch (e.state.kind) {
     case "FIGHTING": {
       const updatedPlayer = { ...p, health: p.health - 1 }
@@ -32,7 +32,7 @@ export const whenAttack: (e: Ennemy, p: Player) => Either<DomainError, Ennemy> =
   }
 }
 
-export const whenDoubleAttack: (e: Ennemy, p: Player) => Either<DomainError, Ennemy> = (e, p) => {
+export const whenDoubleAttack: (e: Ennemy<EnnemyState>, p: Player) => Either<DomainError, Ennemy<Fighting>> = (e, p) => {
   switch (e.state.kind) {
     case "FIGHTING": {
       const updatedPlayer = { ...p, health: p.health - 2 }
@@ -43,7 +43,7 @@ export const whenDoubleAttack: (e: Ennemy, p: Player) => Either<DomainError, Enn
   }
 }
 
-export const whenHitted: (e: Ennemy, damage: number, p: Player) => Either<DomainError, Ennemy> = (e, damage, p) => {
+export const whenHitted: (e: Ennemy<EnnemyState>, damage: number, p: Player) => Either<DomainError, Ennemy<Dead | Fighting>> = (e, damage, p) => {
   switch (e.state.kind) {
     case "PATROLLING":
     case "CHASING":
@@ -63,7 +63,7 @@ export const whenHitted: (e: Ennemy, damage: number, p: Player) => Either<Domain
   }
 }
 
-export const whenDie: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => {
+export const whenDie: (e: Ennemy<EnnemyState>) => Either<DomainError, Ennemy<Dead>> = (e) => {
   switch (e.state.kind) {
     case "PATROLLING":
     case "FIGHTING": {
@@ -74,7 +74,7 @@ export const whenDie: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => {
   }
 }
 
-export const whenLost: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => {
+export const whenLost: (e: Ennemy<EnnemyState>) => Either<DomainError, Ennemy<RunningTo>> = (e) => {
   switch (e.state.kind) {
     case "CHASING": {
       return E.right({ ...e, state: { kind: "RUNNING_TO", goal: e.initialPosition } });
@@ -84,7 +84,7 @@ export const whenLost: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => {
   }
 }
 
-export const whenEscape: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => {
+export const whenEscape: (e: Ennemy<EnnemyState>) => Either<DomainError, Ennemy<Chasing>> = (e) => {
   switch (e.state.kind) {
     case "FIGHTING": {
       return E.right({ ...e, state: { kind: "CHASING", target: e.state.player } });
@@ -94,7 +94,7 @@ export const whenEscape: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => {
   }
 }
 
-export const whenKill: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => {
+export const whenKill: (e: Ennemy<EnnemyState>) => Either<DomainError, Ennemy<RunningTo>> = (e) => {
   switch (e.state.kind) {
     case "FIGHTING": {
       return E.right({ ...e, state: { kind: "RUNNING_TO", goal: e.initialPosition } });
@@ -104,7 +104,7 @@ export const whenKill: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => {
   }
 }
 
-export const whenReachGoal: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => {
+export const whenReachGoal: (e: Ennemy<EnnemyState>) => Either<DomainError, Ennemy<Patrolling>> = (e) => {
   switch (e.state.kind) {
     case "RUNNING_TO": {
       const defaultShape: Shape = [
@@ -120,7 +120,7 @@ export const whenReachGoal: (e: Ennemy) => Either<DomainError, Ennemy> = (e) => 
   }
 }
 
-export const updateEnnemy: (e: Ennemy, i: Input) => Either<DomainError, Ennemy> = (who, what) => {
+export const updateEnnemy: (e: Ennemy<EnnemyState>, i: Input) => Either<DomainError, Ennemy<EnnemyState>> = (who, what) => {
   switch (what.kind) {
     case "Attack": return whenAttack(who, what.player);
     case "Detect": return whenDetect(who, what.player)
