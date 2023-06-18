@@ -10,33 +10,39 @@ export type Player = {
 export const createPlayer: (id: number, p: Point, health: number) => Player =
   (id, p, h) => ({ id: id, position: p, health: h });
 
-export type EnnemyState =
-  {
-    kind: "PATROLLING",
-    area: Shape
-  } |
-  {
-    kind: "CHASING",
-    target: Player
-  } |
-  {
-    kind: "FIGHTING",
-    player: Player
-  } |
-  {
-    kind: "RUNNING_TO",
-    goal: Point
-  } |
-  {
-    kind: "DEAD"
-  }
+export type Patrolling = {
+  kind: "PATROLLING",
+  area: Shape
+}
 
-export type Ennemy = {
+export type Fighting = {
+  kind: "FIGHTING",
+  player: Player
+}
+
+export type Chasing = {
+  kind: "CHASING",
+  target: Player
+}
+
+export type RunningTo = {
+  kind: "RUNNING_TO",
+  goal: Point
+}
+
+export type Dead = {
+  kind: 'DEAD'
+}
+
+export type EnnemyState = Patrolling | Chasing | Fighting | RunningTo | Dead;
+
+
+export type Ennemy<T extends EnnemyState | { kind: unknown } = { kind: unknown }> = {
   id: number,
   initialPosition: Point,
   position: Point,
   health: number
-  state: EnnemyState
+  state: T
 }
 
 export const createEnnemy: (id: number, p: Point, a: Shape) => Ennemy =
